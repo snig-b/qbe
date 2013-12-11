@@ -2,10 +2,12 @@ from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.contrib import admin
 from django.contrib.admin.util import unquote
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls import patterns, url
 from django.shortcuts import redirect
-from django.utils.functional import update_wrapper
-
+try:
+    from django.utils.functional import update_wrapper
+except ImportError:
+    from functools import update_wrapper
 from django_qbe.utils import pickle_encode, get_query_hash
 from django_qbe.utils import admin_site
 

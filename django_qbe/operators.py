@@ -56,6 +56,8 @@ class CustomOperator:
 
     def __init__(self, db_field, operator, value, db_alias="default"):
         self.params = []
+        self.selects = []
+        self.froms = []
         self.wheres = []
 
         self.db_field = db_field
@@ -100,6 +102,18 @@ class CustomOperator:
         value = self._get_lookup(self.operator, self.value)
         self.params.append(self.value)
         return self.params
+
+    def get_selects(self):
+        """
+        returns a list
+        """
+        return self.selects
+
+    def get_froms(self):
+        """
+        returns a list
+        """
+        return self.froms
 
     def get_wheres(self):
         """

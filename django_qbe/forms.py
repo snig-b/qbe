@@ -12,7 +12,7 @@ from django.utils.translation import ugettext as _
 from django_qbe.operators import CustomOperator, BACKEND_TO_OPERATIONS
 from django_qbe.utils import get_models
 from django_qbe.widgets import CriteriaInput
-
+from collections import OrderedDict as odict
 
 DATABASES = None
 try:
@@ -29,7 +29,7 @@ except AttributeError:
 SORT_CHOICES = (
     ("", ""),
     ("asc", _("Ascending")),
-    ("des", _("Descending")),
+    ("desc", _("Descending")),
 )
 
 
@@ -187,7 +187,7 @@ class BaseQueryByExampleFormSet(BaseFormSet):
             if alias and not is_join:
                 aliases.append(alias)
             if sort:
-                sorts.append(db_field)
+                sorts.append(db_field + " " + sort)
             if group_by:
                 groups_by.append(db_field)
             if all(criteria):
@@ -235,6 +235,22 @@ class BaseQueryByExampleFormSet(BaseFormSet):
                         params += custom_params
                     else:
                         params += [custom_params, ]
+
+                    # make sure the operators selects are iterable:
+                    custom_selects = custom_operator.get_selects()
+                    if isinstance(custom_selects, collections.Iterable):
+                        selects += custom_selects
+                    else:
+                        selects += [custom_selects, ]
+                    selects = list(odict.fromkeys(selects))
+
+                    # make sure the operators froms are iterable:
+                    custom_froms = custom_operator.get_froms()
+                    if isinstance(custom_froms, collections.Iterable):
+                        froms += custom_froms
+                    else:
+                        froms += [custom_froms, ]
+                    froms = list(odict.fromkeys(froms))
 
                     # make sure the operators wheres are iterable:
                     custom_wheres = custom_operator.get_wheres()
@@ -326,6 +342,10 @@ class BaseQueryByExampleFormSet(BaseFormSet):
                 else:
                     result = []
                 while i < l:
+                    if "." not in selects[i]:
+                        result.append((row[i], None))
+                        i = i+1
+                        continue
                     appmodel, field = selects[i].split(".")
                     appmodel = self._unquote_name(appmodel)
                     field = self._unquote_name(field)
@@ -381,6 +401,9 @@ class BaseQueryByExampleFormSet(BaseFormSet):
             selects = self._selects
         if selects and isinstance(selects, (tuple, list)):
             for select in selects:
+                if "." not in select:
+                    labels.append(select)
+                    continue
                 label_splits = select.replace("_", ".").split(".")
                 label_splits_field = " ".join(label_splits[2:]).capitalize()
                 label = u"%s.%s: %s" % (label_splits[0].capitalize(),
@@ -410,6 +433,9 @@ class BaseQueryByExampleFormSet(BaseFormSet):
         qn = self._db_operations.quote_name
         selects = []
         for select in self._selects:
+            if '.' not in select:
+                selects.append(select)
+                continue
             appmodel, field = select.split(".")
             appmodel = self._unquote_name(appmodel)
             field = self._unquote_name(field)
