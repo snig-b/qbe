@@ -406,9 +406,7 @@ class BaseQueryByExampleFormSet(BaseFormSet):
                     continue
                 label_splits = select.replace("_", ".").split(".")
                 label_splits_field = " ".join(label_splits[2:]).capitalize()
-                label = u"%s.%s: %s" % (label_splits[0].capitalize(),
-                                        label_splits[1].capitalize(),
-                                        label_splits_field)
+                label = u"%s" % label_splits_field
                 labels.append(label)
         return labels
 
